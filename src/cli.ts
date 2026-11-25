@@ -1,4 +1,5 @@
 // npm run bench -- generate [--seed N]           print a stream as JSON
+// npm run bench -- labels [--seed N]             print claim pairs and relevance labels for training
 // npm run bench -- run [--seed N] [--json]       replay it into the no-defense baseline and grade it
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -6,6 +7,7 @@ import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { generate } from "./bench/generate.ts";
 import { grade, type Mean, type Rate } from "./bench/grade.ts";
+import { claimPairs, relevanceLabels } from "./bench/labels.ts";
 import { run } from "./bench/run.ts";
 import { FakeModel } from "./fake-model.ts";
 import { PlainFileMemory } from "./systems/plain-file.ts";
@@ -20,6 +22,8 @@ const stream = generate(seed);
 
 if (positionals[0] === "generate") {
   console.log(JSON.stringify(stream, null, 2));
+} else if (positionals[0] === "labels") {
+  console.log(JSON.stringify({ seed, claimPairs: claimPairs(stream), relevance: relevanceLabels(stream) }, null, 2));
 } else if (positionals[0] === "run") {
   const dir = mkdtempSync(join(tmpdir(), "memparole-"));
   try {
@@ -42,6 +46,6 @@ if (positionals[0] === "generate") {
     rmSync(dir, { recursive: true, force: true });
   }
 } else {
-  console.error("usage: npm run bench -- generate|run [--seed N] [--json]");
+  console.error("usage: npm run bench -- generate|labels|run [--seed N] [--json]");
   process.exitCode = 1;
 }
