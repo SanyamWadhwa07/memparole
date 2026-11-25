@@ -16,7 +16,8 @@
   "scripts": {
     "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
-    "bench": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/cli.ts"
+    "bench": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/cli.ts",
+    "owner": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/owner.ts"
   },
   "devDependencies": {
     "@types/node": "^22.20.7",
