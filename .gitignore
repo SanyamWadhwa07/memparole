@@ -1,0 +1,19 @@
+# secrets: real keys live only in .env, never in git
+.env
+.env.*
+!.env.example
+
+# dependencies
+node_modules/
+
+# bench output
+runs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# local tooling
+.claude/
