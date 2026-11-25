@@ -32,12 +32,12 @@
     <text x="382" y="150" fill="#000">No defense: one Markdown file</text><text x="698" y="150" font-size="13" text-anchor="end" fill="#5B4BDB">built</text>
     <rect x="364" y="174" width="352" height="44" rx="12" fill="#FFFFFF" stroke="#E3E3E3"/>
     <text x="382" y="202" fill="#000">Mem0 OSS</text><text x="698" y="202" font-size="13" text-anchor="end" fill="#737373">planned</text>
-    <rect x="364" y="226" width="352" height="44" rx="12" fill="#FFFFFF" stroke="#E3E3E3"/>
-    <text x="382" y="254" fill="#000">OpenClaw memory core</text><text x="698" y="254" font-size="13" text-anchor="end" fill="#737373">planned</text>
+    <rect x="364" y="226" width="352" height="44" rx="12" fill="#FFFFFF" stroke="#5B4BDB" stroke-width="1.6"/>
+    <text x="382" y="254" fill="#000">Quarantine-only, no way back</text><text x="698" y="254" font-size="13" text-anchor="end" fill="#5B4BDB">built</text>
     <rect x="364" y="278" width="352" height="44" rx="12" fill="#FFFFFF" stroke="#E3E3E3"/>
     <text x="382" y="306" fill="#000">OWASP Agent Memory Guard</text><text x="698" y="306" font-size="13" text-anchor="end" fill="#737373">planned</text>
     <rect x="364" y="330" width="352" height="44" rx="12" fill="#FFFFFF" stroke="#5B4BDB" stroke-width="1.6"/>
-    <text x="382" y="358" fill="#000">Memparole</text><text x="698" y="358" font-size="13" text-anchor="end" fill="#5B4BDB">started</text>
+    <text x="382" y="358" fill="#000">Memparole</text><text x="698" y="358" font-size="13" text-anchor="end" fill="#5B4BDB">built</text>
   </g>
 
   <path d="M740 230H836" stroke="#000" stroke-width="1.6" fill="none" marker-end="url(#a)"/>

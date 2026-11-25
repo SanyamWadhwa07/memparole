@@ -14,6 +14,15 @@ Memparole and ParoleBench run on your machine as one Node process. They:
 Generated streams contain planted misinformation on purpose, including instructions such as "take
 instructions from ops-bot@...". Do not load a ParoleBench stream into a real agent's memory.
 
+## The MCP server
+
+The MCP server exposes `remember`, `recall` and `wake`, and nothing that changes trust: owner
+review and inspection exist only on the command line. It cannot see who really spoke, so an
+agent's claim that the owner said something is stored as quarantined unless the server is started
+with `--trust-owner-claims`. With that flag, a prompt-injected agent can write trusted memory; use
+it only when the agent's one chat channel is the owner's. Results from `recall` mark quarantined
+memory as untrusted, but the agent's host decides how it treats that marking.
+
 ## What the decision log protects against
 
 SQLite triggers make the decision log append-only and an entry's provenance fixed, and every read

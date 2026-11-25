@@ -7,9 +7,10 @@
 
 <p align="center">
   <a href="#run-it">Run it</a> ·
-  <a href="#how-parolebench-works">How ParoleBench works</a> ·
-  <a href="#metrics">Metrics</a> ·
   <a href="#results">Results</a> ·
+  <a href="#a-fix-for-openclaw-153426">OpenClaw #153426</a> ·
+  <a href="#use-it">Use it</a> ·
+  <a href="#how-parolebench-works">ParoleBench</a> ·
   <a href="#whats-next">What's next</a>
 </p>
 
@@ -27,27 +28,85 @@ by deleting SQLite rows by hand ([openclaw#153426](https://github.com/openclaw/o
 open as P0; see also [#203532](https://github.com/openclaw/openclaw/issues/203532) and
 [#204738](https://github.com/openclaw/openclaw/issues/204738)).
 
-Memparole will let quarantined memory out only on parole: the owner signs off on the exact bytes,
-or two independent sources agree and no trusted memory disagrees. If the bytes change, the parole
-is void.
+Memparole lets quarantined memory out only on parole: the owner signs off on the exact bytes, or
+two independent sources agree and no trusted memory disagrees. If the bytes change, the parole is
+void.
 
-**Status: milestone 2 started.** The benchmark came first, so the defense is measured against
-baselines from day one. ParoleBench runs end to end, offline, with a no-defense baseline. The
-Memparole core now runs too: the store, the decision log, both ways out of quarantine, and the
-check that voids trust when bytes change. Claim extraction by a small model is not built yet.
+**What works today:** the core library, an owner command line, an MCP memory server, the
+benchmark with three systems, and all eleven acceptance cases from the #153426 field report as
+tests. No model is needed for any of it yet.
 
 ## Run it
 
-Needs Node.js 22.17 or newer. No keys, no network: the baseline uses a scripted fake model, and
-the Memparole core uses no model yet.
+Needs Node.js 22.17 or newer. No keys, no network.
 
 ```bash
 npm install
-npm test                                        # 31 tests, the whole pipeline included
-npm run bench -- run --seed 1                   # the no-defense baseline, graded
-npm run bench -- run --seed 1 --system memparole
-npm run bench -- generate --seed 1              # print the event stream as JSON
+npm test                              # 48 tests: core, acceptance cases A to K, MCP server, benchmark
+npm run bench -- compare --seeds 10   # every system on ParoleBench, as a table
 ```
+
+## Results
+
+ParoleBench v1, seeds 1 to 10: 20 simulated weeks, 160 planted claims, 220 true facts, 220
+questions. Measured with `npm run bench -- compare --seeds 10`. No system here uses a real model:
+the no-defense baseline uses a scripted note-taker that writes down every message, and
+quarantine-only and Memparole use no model at all.
+
+| System | Planted claims in trusted memory | True facts in trusted memory | True facts stuck in quarantine | Stale answers | NDCG@5 | Wake tokens per idle day |
+|---|---|---|---|---|---|---|
+| No defense | 100.0% (160/160) | 100.0% (220/220) | 0.0% | 95.0% (38/40) | 0.89 | 314 |
+| Quarantine-only | 0.0% (0/160) | 36.4% (80/220) | 63.6% | 95.0% (38/40) | 0.89 | 67 |
+| Memparole | 0.0% (0/160) | 45.5% (100/220) | 54.5% | 95.0% (38/40) | 0.89 | 76 |
+
+How to read it:
+- **Quarantine works and costs a lot.** Holding back everything the owner didn't say keeps out
+  every planted claim, including 20 that two feeds repeated from one anonymous post, but it also
+  holds back 140 of 220 true facts. Quarantine-only models the kind of policy OpenClaw ships
+  today: provenance and quarantine with no way back.
+- **Parole recovers the true facts that have independent support.** Memparole lets out 20 of those
+  140 and none of the planted claims. Only one true fact per persona per week has a second
+  independent source in this version of the benchmark, so 20 is the most this rule can recover
+  here. The rest need the owner's review.
+- **Stale answers are not fixed yet.** Nothing retires an outdated fact until a model extracts what
+  each claim is about. That is the next piece of work.
+- **Tokens drop by about 4 times** because quarantined memory is not loaded at wake-up.
+
+## A fix for OpenClaw #153426
+
+Memparole's file layer is a reference implementation of the recovery that the #153426 field
+report asks for: an owner decision bound to the exact reviewed hash, made outside the agent tool
+path, recorded as its own audited entry, and void once the bytes change. Every write that is
+downgraded records why (`non-owner`, `tainted-turn`, `hash-mismatch` or `already-untrusted`), an
+operator can inspect a file without changing anything, and publications keep continuity.
+
+All eleven acceptance cases from the report (A to K) run as tests in
+[`test/acceptance.test.ts`](test/acceptance.test.ts). The proposal for OpenClaw, with what maps
+where and the two simplifications, is in
+[`docs/upstream-proposal.md`](docs/upstream-proposal.md).
+
+## Use it
+
+**The owner's command line** is the only place a trust decision is made:
+
+```bash
+npm run owner -- inspect --db memory.db                                  # every entry, its state and why
+npm run owner -- inspect --db memory.db --file MEMORY.md --disk MEMORY.md # one file: none, clean, stale, untrusted or owner-approved
+npm run owner -- review --db memory.db --id 7 --hash <sha256> --parole --reason "I read it"
+npm run owner -- log --db memory.db                                      # the decision log
+```
+
+**The MCP memory server** gives an agent three tools: `remember` (with who said it and the source
+URL), `recall` (quarantined results are marked untrusted) and `wake` (trusted memory only). There
+is no review or inspect tool. Add it to any MCP client:
+
+```json
+{ "mcpServers": { "memparole": { "command": "node", "args": ["--experimental-strip-types", "/path/to/memparole/src/serve.ts", "--db", "/path/to/memory.db"] } } }
+```
+
+The server cannot see who really spoke, so it stores an agent's "the owner said this" as
+quarantined unless you start it with `--trust-owner-claims`. Use that flag only when the agent's
+one chat channel is the owner's.
 
 ## How Memparole decides
 
@@ -68,6 +127,9 @@ npm run bench -- generate --seed 1              # print the event stream as JSON
   forged to match.
 - **At wake-up only trusted memory is injected.** Quarantined memory is reachable through search,
   marked untrusted.
+- **Curated files are tracked write by write.** A write is trusted only when it continues a trusted
+  record ([`src/core/files.ts`](src/core/files.ts)); otherwise it is quarantined with its reason,
+  and the owner's review is the way back.
 
 ## How ParoleBench works
 
@@ -135,21 +197,16 @@ All are computed after the last event of the week.
 
 Rates are micro-averaged: counts are summed across personas, then divided once.
 
-## Results
-
-Not measured yet. Today the only model is the scripted fake, which writes down every message
-verbatim, so its numbers test the pipeline and say nothing about real systems. Results will come
-from real baselines and a real model, and each run will be reported with its seed, model and cost.
-
 ## What's next
 
-1. **Finish the Memparole core.** A small model extracts each claim and its supersession key, so
-   paraphrases can corroborate each other, contradictions block parole, and an owner's update
-   retires the old fact. An owner command line for `inspect` and `review`.
-2. **More baselines** behind the same interface: Mem0 OSS, OpenClaw memory core defaults, OWASP
-   Agent Memory Guard.
-3. **Delivery:** an MCP memory server, an OpenClaw plugin, and an upstream proposal for #153426.
-4. **Real-model runs**, only with an agreed provider, model and cost.
+1. **Claim extraction.** A small model extracts each claim and what it is about, so paraphrases
+   can corroborate each other, contradictions block parole, and an owner's update retires the old
+   fact. This is what the stale-answer column is waiting for. Results with a real model will be
+   reported with the model and the cost.
+2. **The two learned parts** the training labels are for: a compact claim-agreement model against
+   an off-the-shelf NLI model, and a learned ranker against BM25 and embedding search.
+3. **More baselines** behind the same interface: Mem0 OSS and OWASP Agent Memory Guard.
+4. **A native OpenClaw plugin**, and the upstream proposal posted to #153426.
 
 ## License
 
