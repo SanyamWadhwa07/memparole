@@ -31,4 +31,4 @@ jobs:
       - name: Unit and pipeline tests (fake model, no keys, no network)
         run: npm test
       - name: The bench CLI runs end to end
-        run: npm run bench -- run --seed 1
+        run: npm run bench -- compare --seeds 2

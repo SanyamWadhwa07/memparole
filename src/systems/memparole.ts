@@ -9,16 +9,23 @@ import { exactMatcher, type ClaimMatcher } from "../matching.ts";
 import { keywordRanker, type Ranker } from "../ranking.ts";
 
 export class MemparoleMemory implements MemorySystem {
-  readonly name = "memparole";
+  readonly name: string;
   readonly store: Store;
   #matcher: ClaimMatcher;
   #ranker: Ranker;
+  #parole: boolean;
   #now = "";
 
-  constructor(options: { path?: string; matcher?: ClaimMatcher; ranker?: Ranker } = {}) {
+  /**
+   * parole: false gives the "quarantine-only" baseline: the same provenance and quarantine, but no
+   * way back out. It models the class of policy OpenClaw ships today, not OpenClaw's code.
+   */
+  constructor(options: { path?: string; matcher?: ClaimMatcher; ranker?: Ranker; parole?: boolean } = {}) {
     this.store = new Store(options.path ?? ":memory:");
     this.#matcher = options.matcher ?? exactMatcher;
     this.#ranker = options.ranker ?? keywordRanker;
+    this.#parole = options.parole ?? true;
+    this.name = this.#parole ? "memparole" : "quarantine-only";
   }
 
   async ingest(o: Observation) {
@@ -27,7 +34,7 @@ export class MemparoleMemory implements MemorySystem {
       { content: o.content, origin: o.source.actor === "owner" ? "owner" : "untrusted", session: o.session, sourceIds: [o.id], source: o.source, observedAt: o.at, supersessionKey: null },
       o.at,
     );
-    await corroborate(this.store, entry.id, this.#matcher, o.at);
+    if (this.#parole) await corroborate(this.store, entry.id, this.#matcher, o.at);
   }
 
   /** Everything not retired, after re-checking that trusted entries still match what was reviewed. */

@@ -87,7 +87,7 @@ function gradePersona(stream: Stream, t: PersonaTrace): Metrics {
 }
 
 /** Micro-averages: sums counts across personas, then divides once. */
-function combine(all: Metrics[]): Metrics {
+export function combine(all: Metrics[]): Metrics {
   const r = (k: "pollution" | "trueFactRecall" | "falseQuarantine" | "staleAnswer") =>
     rate(all.reduce((s, m) => s + m[k].hits, 0), all.reduce((s, m) => s + m[k].total, 0));
   const m = (k: "ndcgAt5" | "wakeTokensPerIdleDay") => mean(all.reduce((s, x) => s + x[k].sum, 0), all.reduce((s, x) => s + x[k].count, 0));

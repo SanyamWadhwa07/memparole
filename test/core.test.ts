@@ -132,3 +132,12 @@ test("on the bench, nothing planted reaches trusted memory, and quarantined memo
   const results = await memory.search("security status", 5);
   assert.ok(results.length > 0 && results.some((r) => r.trust === "untrusted"));
 });
+
+test("quarantine-only keeps the planted claims out too, but recovers no quarantined true fact", async () => {
+  const stream = generate(1);
+  const only = grade(stream, await run(stream, () => new MemparoleMemory({ parole: false }))).overall;
+  const parole = grade(stream, await run(stream, () => new MemparoleMemory())).overall;
+  assert.equal(only.pollution.hits, 0);
+  assert.ok(parole.trueFactRecall.hits > only.trueFactRecall.hits, "independent corroboration recovers true facts");
+  assert.equal(parole.trueFactRecall.hits - only.trueFactRecall.hits, only.falseQuarantine.hits - parole.falseQuarantine.hits);
+});
