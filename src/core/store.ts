@@ -37,6 +37,7 @@ export const sha256 = (text: string) => createHash("sha256").update(text, "utf8"
 
 const STATE_AFTER: Record<Action, State> = { admit: "trusted", parole: "trusted", quarantine: "quarantined", void: "quarantined", retire: "retired" };
 
+const SCHEMA_VERSION = 1;
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS entries (
   id INTEGER PRIMARY KEY,
@@ -97,7 +98,9 @@ export class Store {
 
   constructor(path: string) {
     this.#db = new DatabaseSync(path);
+    // Opening or upgrading a database creates missing tables and never changes an entry's state.
     this.#db.exec(SCHEMA);
+    this.#db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
   }
 
   #tx<T>(fn: () => T): T {
@@ -118,10 +121,13 @@ export class Store {
       .run(entryId, d.at, d.actor, d.action, d.reviewedHash, d.reason);
   }
 
-  /** Stores an entry. Only the owner's own words are trusted on arrival; everything else starts quarantined. */
-  add(input: Omit<Entry, "id" | "hash" | "state">, at: string): Entry {
+  /**
+   * Stores an entry. By default only the owner's own words are trusted on arrival and everything
+   * else starts quarantined; a caller with a stricter rule (tracked file writes) passes its verdict.
+   */
+  add(input: Omit<Entry, "id" | "hash" | "state">, at: string, admission?: { trusted: boolean; reason: string }): Entry {
     const hash = sha256(input.content);
-    const trusted = input.origin === "owner";
+    const trusted = admission ? admission.trusted : input.origin === "owner";
     return this.#tx(() => {
       const { lastInsertRowid } = this.#db
         .prepare("INSERT INTO entries (content, hash, origin, session, source_ids, source, observed_at, supersession_key, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
@@ -132,7 +138,7 @@ export class Store {
         actor: "system",
         action: trusted ? "admit" : "quarantine",
         reviewedHash: hash,
-        reason: trusted ? "the owner said it" : `origin is ${input.origin}: only the owner's words are trusted on arrival`,
+        reason: admission?.reason ?? (trusted ? "the owner said it" : `origin is ${input.origin}: only the owner's words are trusted on arrival`),
       });
       return this.get(id)!;
     });

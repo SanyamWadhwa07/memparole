@@ -51,8 +51,8 @@ test("owner review is bound to the exact bytes, and is void once they change", (
   const path = join(dir, "review.db");
   const store = new Store(path);
   const e = add(store, "Dentist appointment on 2026-11-12 at 07:30.", { id: "file:MEMORY.md", actor: "unknown" });
-  assert.throws(() => ownerReview(store, { entryId: e.id, hash: sha256("something else"), action: "parole", reason: "ok", at: AT }), /does not match/);
-  ownerReview(store, { entryId: e.id, hash: e.hash, action: "parole", reason: "I booked it", at: AT });
+  assert.throws(() => ownerReview(store, { entryId: e.id, hash: sha256("something else"), action: "parole", reason: "ok", at: AT }, "operator"), /does not match/);
+  ownerReview(store, { entryId: e.id, hash: e.hash, action: "parole", reason: "I booked it", at: AT }, "operator");
   assert.equal(store.get(e.id)!.state, "trusted");
   assert.deepEqual(store.verify(AT), []);
 
