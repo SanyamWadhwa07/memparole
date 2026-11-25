@@ -21,4 +21,10 @@ All notable changes are documented here. The format follows
   source IDs, and per-probe relevance labels, for training a claim-agreement model and a ranker.
 - `Ranker` and `ClaimMatcher` interfaces, so trained models can replace keyword search and the
   corroboration check.
-- 23 tests, and CI on Linux, macOS and Windows.
+- The Memparole core, first slice: a `node:sqlite` store where provenance is fixed by triggers;
+  an append-only decision log (who, when, reviewed hash, reason); trust on arrival for the owner's
+  words only; owner review bound to the exact SHA-256; parole when two or more independent web
+  sources agree with no trusted contradiction; and a re-check on every read that voids trust when
+  content changes, even with a forged stored hash.
+- `npm run bench -- run --system memparole`.
+- 31 tests, and CI on Linux, macOS and Windows.

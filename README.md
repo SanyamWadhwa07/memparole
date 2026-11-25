@@ -31,20 +31,43 @@ Memparole will let quarantined memory out only on parole: the owner signs off on
 or two independent sources agree and no trusted memory disagrees. If the bytes change, the parole
 is void.
 
-**Status: milestone 1.** The benchmark comes first, so the defense can be measured against real
+**Status: milestone 2 started.** The benchmark came first, so the defense is measured against
 baselines from day one. ParoleBench runs end to end, offline, with a no-defense baseline. The
-Memparole defense itself is not built yet.
+Memparole core now runs too: the store, the decision log, both ways out of quarantine, and the
+check that voids trust when bytes change. Claim extraction by a small model is not built yet.
 
 ## Run it
 
-Needs Node.js 22.17 or newer. No keys, no network: every run uses a scripted fake model.
+Needs Node.js 22.17 or newer. No keys, no network: the baseline uses a scripted fake model, and
+the Memparole core uses no model yet.
 
 ```bash
 npm install
-npm test                             # 23 tests, the whole pipeline included
-npm run bench -- run --seed 1        # replay a week into the no-defense baseline and grade it
-npm run bench -- generate --seed 1   # print the event stream as JSON
+npm test                                        # 31 tests, the whole pipeline included
+npm run bench -- run --seed 1                   # the no-defense baseline, graded
+npm run bench -- run --seed 1 --system memparole
+npm run bench -- generate --seed 1              # print the event stream as JSON
 ```
+
+## How Memparole decides
+
+- **On arrival**, only the owner's own words are trusted. Web pages, feeds, other people and
+  file edits start quarantined. Where an entry came from is stored once and can never be changed.
+- **Out of quarantine, way one: the owner reviews the exact bytes.** The review names the SHA-256
+  the owner saw and does nothing if the entry no longer matches. It is an owner command, not an
+  agent tool.
+- **Out of quarantine, way two: independent sources agree.** Two or more web sources on different
+  registrable domains, not citing one upstream or each other, state the same claim, and no
+  trusted memory contradicts it. A `ClaimMatcher` decides "same claim"
+  ([`src/matching.ts`](src/matching.ts)); exact text for now, a trained model later. Fixed code
+  decides the rest ([`src/core/corroborate.ts`](src/core/corroborate.ts)).
+- **Every change is logged.** An append-only table records who, when, the hash reviewed and why.
+  SQLite triggers refuse edits and deletes to it.
+- **Trust is re-checked on every read.** If an entry's content no longer hashes to what was
+  reviewed, it goes back to quarantine and the reason is logged, even when the stored hash was
+  forged to match.
+- **At wake-up only trusted memory is injected.** Quarantined memory is reachable through search,
+  marked untrusted.
 
 ## How ParoleBench works
 
@@ -94,7 +117,7 @@ model and a recall ranker. `npm run bench -- labels --seed 1` prints both:
   subject, or chatter).
 
 Search goes through a `Ranker` ([`src/ranking.ts`](src/ranking.ts)) and claim agreement through a
-`ClaimMatcher` ([`src/bench/labels.ts`](src/bench/labels.ts)), so trained models can replace the
+`ClaimMatcher` ([`src/matching.ts`](src/matching.ts)), so trained models can replace the
 defaults without changing any memory system.
 
 ## Metrics
@@ -120,12 +143,9 @@ from real baselines and a real model, and each run will be reported with its see
 
 ## What's next
 
-1. **Memparole core.** Every entry stores a content hash, origin, session kind, source IDs, time,
-   a supersession key and a state (quarantined, paroled, retired). An append-only decision log
-   records who, when, the reviewed hash and why. Exactly two ways out of quarantine: owner review
-   bound to the exact hash, which no agent tool can call, or two or more independent sources
-   (different registrable domains, no shared upstream) with no trusted contradiction. A small model
-   extracts the claim; fixed code rules decide. Built on `node:sqlite`.
+1. **Finish the Memparole core.** A small model extracts each claim and its supersession key, so
+   paraphrases can corroborate each other, contradictions block parole, and an owner's update
+   retires the old fact. An owner command line for `inspect` and `review`.
 2. **More baselines** behind the same interface: Mem0 OSS, OpenClaw memory core defaults, OWASP
    Agent Memory Guard.
 3. **Delivery:** an MCP memory server, an OpenClaw plugin, and an upstream proposal for #153426.
