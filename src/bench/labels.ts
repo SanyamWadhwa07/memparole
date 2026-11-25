@@ -1,18 +1,8 @@
 // Training and evaluation labels derived from a stream's ground truth, for the two learned parts
 // planned later: a claim-agreement model (which pairs state the same fact) and a recall ranker.
 // Derived, not stored, so the stream stays the single source of truth.
+import type { PairLabel } from "../matching.ts";
 import { status, type Stream } from "./types.ts";
-
-export type PairLabel = "same" | "contradicts" | "unrelated";
-
-/**
- * Decides whether two claim texts state the same fact, contradict each other, or are unrelated.
- * Memparole's corroboration rule will call one; a trained model can replace the default.
- */
-export interface ClaimMatcher {
-  readonly name: string;
-  match(a: string, b: string): Promise<PairLabel>;
-}
 
 export interface PairSide {
   eventId: string;
