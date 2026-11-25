@@ -10,7 +10,8 @@ import { run } from "../src/bench/run.ts";
 import type { MemoryEntry, MemorySystem } from "../src/bench/system.ts";
 import { status, type Observation } from "../src/bench/types.ts";
 import { FakeModel } from "../src/fake-model.ts";
-import { keywordSearch, PlainFileMemory } from "../src/systems/plain-file.ts";
+import { keywordRanker } from "../src/ranking.ts";
+import { PlainFileMemory } from "../src/systems/plain-file.ts";
 
 const stream = generate(1);
 const dir = await mkdtemp(join(tmpdir(), "memparole-test-"));
@@ -65,7 +66,7 @@ function oracle(persona: string): MemorySystem {
     },
     wake: async () => held,
     inspect: async () => held,
-    search: async (q, k) => keywordSearch(held, q, k),
+    search: (q, k) => keywordRanker.rank(q, held, k),
   };
 }
 
