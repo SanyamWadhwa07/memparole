@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" width="1200" height="600" font-family="Roboto, 'Helvetica Neue', Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">How ParoleBench grades a memory system</title>
+  <desc id="d">A seeded generator writes a week of events. The memory system under test sees only the observations, without ground truth. Its trace and the ground truth go to an exact-match grader, which reports six metrics.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#000"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5B4BDB"/></marker>
+  </defs>
+  <rect width="1200" height="600" rx="24" fill="#FFFFFF"/>
+
+  <!-- 1 generate -->
+  <rect x="40" y="150" width="200" height="240" rx="18" fill="#F7F7F7"/>
+  <text x="62" y="188" font-size="21" font-weight="600" fill="#000">1  Generate</text>
+  <text x="62" y="212" font-size="14" fill="#737373">seeded, repeatable</text>
+  <g font-size="15" fill="#000">
+    <circle cx="68" cy="248" r="4" fill="#5B4BDB"/><text x="82" y="253">owner chats</text>
+    <circle cx="68" cy="274" r="4" fill="#5B4BDB"/><text x="82" y="279">heartbeat feeds</text>
+    <circle cx="68" cy="300" r="4" fill="#5B4BDB"/><text x="82" y="305">web lookups</text>
+    <circle cx="68" cy="326" r="4" fill="#5B4BDB"/><text x="82" y="331">fact updates</text>
+    <circle cx="68" cy="352" r="4" fill="#5B4BDB"/><text x="82" y="357">file edits, others</text>
+  </g>
+
+  <path d="M240 230H336" stroke="#000" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+  <text x="288" y="218" font-size="13" text-anchor="middle" fill="#000">observations</text>
+  <text x="288" y="252" font-size="12" text-anchor="middle" fill="#737373">no answers</text>
+
+  <!-- 2 system under test -->
+  <rect x="340" y="40" width="400" height="350" rx="18" fill="#F7F7F7"/>
+  <text x="364" y="78" font-size="21" font-weight="600" fill="#000">2  Memory system under test</text>
+  <text x="364" y="102" font-size="14" fill="#737373">one interface: ingest, wake, search, inspect</text>
+  <g font-size="15">
+    <rect x="364" y="122" width="352" height="44" rx="12" fill="#FFFFFF" stroke="#5B4BDB" stroke-width="1.6"/>
+    <text x="382" y="150" fill="#000">No defense: one Markdown file</text><text x="698" y="150" font-size="13" text-anchor="end" fill="#5B4BDB">built</text>
+    <rect x="364" y="174" width="352" height="44" rx="12" fill="#FFFFFF" stroke="#E3E3E3"/>
+    <text x="382" y="202" fill="#000">Mem0 OSS</text><text x="698" y="202" font-size="13" text-anchor="end" fill="#737373">planned</text>
+    <rect x="364" y="226" width="352" height="44" rx="12" fill="#FFFFFF" stroke="#E3E3E3"/>
+    <text x="382" y="254" fill="#000">OpenClaw memory core</text><text x="698" y="254" font-size="13" text-anchor="end" fill="#737373">planned</text>
+    <rect x="364" y="278" width="352" height="44" rx="12" fill="#FFFFFF" stroke="#E3E3E3"/>
+    <text x="382" y="306" fill="#000">OWASP Agent Memory Guard</text><text x="698" y="306" font-size="13" text-anchor="end" fill="#737373">planned</text>
+    <rect x="364" y="330" width="352" height="44" rx="12" fill="#FFFFFF" stroke="#E3E3E3"/>
+    <text x="382" y="358" fill="#000">Memparole</text><text x="698" y="358" font-size="13" text-anchor="end" fill="#737373">next</text>
+  </g>
+
+  <path d="M740 230H836" stroke="#000" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+  <text x="788" y="218" font-size="13" text-anchor="middle" fill="#000">trace</text>
+  <text x="788" y="252" font-size="12" text-anchor="middle" fill="#737373">wake, top 5</text>
+
+  <!-- ground truth bypasses the system -->
+  <path d="M140 390V500H836" stroke="#5B4BDB" stroke-width="1.6" fill="none" stroke-dasharray="6 5" marker-end="url(#g)"/>
+  <text x="490" y="488" font-size="14" text-anchor="middle" fill="#5B4BDB">ground truth: the claim each event carries, true / false / stale, and the probes</text>
+  <text x="490" y="524" font-size="13" text-anchor="middle" fill="#737373">goes straight to the grader; the system never sees it</text>
+
+  <!-- 3 grade -->
+  <rect x="840" y="150" width="320" height="400" rx="18" fill="#F7F7F7"/>
+  <text x="864" y="188" font-size="21" font-weight="600" fill="#000">3  Grade</text>
+  <text x="864" y="212" font-size="14" fill="#737373">exact match on claim IDs, no LLM judge</text>
+  <g font-size="15" fill="#000">
+    <rect x="864" y="232" width="272" height="294" rx="12" fill="#FFFFFF" stroke="#E3E3E3"/>
+    <text x="884" y="266">pollution rate</text>
+    <text x="884" y="310">true-fact recall</text>
+    <text x="884" y="354">false-quarantine rate</text>
+    <text x="884" y="398">stale-answer rate</text>
+    <text x="884" y="442">NDCG@5</text>
+    <text x="884" y="486">wake tokens per idle day</text>
+  </g>
+  <g font-size="12" fill="#737373" text-anchor="end">
+    <text x="1120" y="266">lower</text><text x="1120" y="310">higher</text><text x="1120" y="354">lower</text>
+    <text x="1120" y="398">lower</text><text x="1120" y="442">higher</text><text x="1120" y="486">lower</text>
+  </g>
+</svg>

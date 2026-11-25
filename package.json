@@ -2,7 +2,7 @@
   "name": "memparole",
   "version": "0.1.0",
   "private": true,
-  "description": "A safe way to make quarantined agent memory trusted again, and ParoleBench, the benchmark that measures it.",
+  "description": "Quarantined agent memory, let out on parole: a re-trust layer for always-on agent memory, and ParoleBench, the benchmark that measures it.",
   "license": "MIT",
   "author": "Sanyam Wadhwa",
   "repository": {
