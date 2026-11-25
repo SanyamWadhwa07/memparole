@@ -17,4 +17,8 @@ All notable changes are documented here. The format follows
 - A memory-system interface (`ingest`, `wake`, `search`, `inspect`) and the first baseline, no
   defense: one plain Markdown memory file.
 - A scripted fake model, so tests and `npm run bench` run offline with no keys.
-- 20 tests, and CI on Linux, macOS and Windows.
+- `npm run bench -- labels`: claim pairs labelled same, contradicts or unrelated, with event and
+  source IDs, and per-probe relevance labels, for training a claim-agreement model and a ranker.
+- `Ranker` and `ClaimMatcher` interfaces, so trained models can replace keyword search and the
+  corroboration check.
+- 23 tests, and CI on Linux, macOS and Windows.

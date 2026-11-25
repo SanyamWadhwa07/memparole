@@ -41,7 +41,7 @@ Needs Node.js 22.17 or newer. No keys, no network: every run uses a scripted fak
 
 ```bash
 npm install
-npm test                             # 20 tests, the whole pipeline included
+npm test                             # 23 tests, the whole pipeline included
 npm run bench -- run --seed 1        # replay a week into the no-defense baseline and grade it
 npm run bench -- generate --seed 1   # print the event stream as JSON
 ```
@@ -80,6 +80,22 @@ The six event kinds, with examples from seed 1:
 A memory system plugs in through one interface, [`src/bench/system.ts`](src/bench/system.ts):
 `ingest` each observation, `wake` (what is injected with no query), `search`, and a read-only
 `inspect`.
+
+## Training labels
+
+The same ground truth gives labels for the two learned parts planned later, a claim-agreement
+model and a recall ranker. `npm run bench -- labels --seed 1` prints both:
+
+- **Claim pairs**, each side with its event ID, source ID and text: `same` (two events carry one
+  claim), `contradicts` (two claims answer one subject: a planted claim, or a fact and its update),
+  and `unrelated` (same domain, different subject, so the negatives are hard).
+- **Relevance labels**: every event judged against every probe question, relevant only if it
+  carries the expected claim, with the reason a non-answer is wrong (stale, false, another
+  subject, or chatter).
+
+Search goes through a `Ranker` ([`src/ranking.ts`](src/ranking.ts)) and claim agreement through a
+`ClaimMatcher` ([`src/bench/labels.ts`](src/bench/labels.ts)), so trained models can replace the
+defaults without changing any memory system.
 
 ## Metrics
 
